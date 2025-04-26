@@ -2,7 +2,7 @@ import pandas as pd
 from graph.friend_network import FriendNetwork
 from graph.friend_network import PathType
 
-NUM_VERTICES = [100, 1000, 10_000, 100_000] 
+NUM_VERTICES = [100, 1000, 10_000]#, 100_000]
 FACTORS = ["5", "raiz(n)", "n/5"]
 
 def get_num_medio_arestas_por_vertice(num_vertice, factor):

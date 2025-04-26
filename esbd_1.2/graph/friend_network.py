@@ -2,6 +2,7 @@ import random
 import uuid
 from graph.person import Person
 from graph.models import PathType
+from collections import deque
 
 class FriendNetwork(object):
     def __init__(self, people_num, connections_num):
@@ -85,24 +86,92 @@ class FriendNetwork(object):
 
     def get_person_by_uid(self, uid):
         return self._graph[uid]['this']
-
-    def _search(self, person_uid, friend_uid, path_type: PathType):
+    
+    def _regular_bfs(self, start_uid, target_uid, visited: dict) -> list:
         '''
-        TODO implementar aqui
-
-        Esta função DEVE retornar uma lista com o caminho mais curto (incluindo origem e destino)
-        percorrido para encontrar o friend_uid partindo do person_uid
+        BFS padrão que encontra o caminho mais curto entre dois nós.
         '''
+        queue = deque([start_uid])
+        
+        while queue:
+            current_uid = queue.popleft()
+            
+            neighbors = self._graph[current_uid]['friends']
+            
+            for neighbor in neighbors:
+                neighbor_uid = neighbor.get_uid()
+                
+                if neighbor_uid == target_uid:
+                    visited[neighbor_uid] = current_uid
+                    return self._reconstruct_path(target_uid, visited)
+                
+                if neighbor_uid not in visited:
+                    visited[neighbor_uid] = current_uid
+                    queue.append(neighbor_uid)
+        
+        return []
 
+    def _alternating_bfs(self, start_uid, target_uid, visited: dict) -> list:
+        '''
+        BFS que segue apenas caminhos onde gêneros adjacentes são diferentes.
+        '''
+        start_genre = self._graph[start_uid]['this'].get_genre()
+        queue = deque([(start_uid, start_genre)])
+        
+        while queue:
+            current_uid, current_genre = queue.popleft()
+            
+            for neighbor in self._graph[current_uid]['friends']:
+                neighbor_uid = neighbor.get_uid()
+                neighbor_genre = neighbor.get_genre()
+                
+                if neighbor_genre != current_genre and neighbor_uid not in visited:
+                    if neighbor_uid == target_uid:
+                        visited[neighbor_uid] = current_uid
+                        return self._reconstruct_path(target_uid, visited)
+                    
+                    visited[neighbor_uid] = current_uid
+                    queue.append((neighbor_uid, neighbor_genre))
+        
+        return []
+
+    def _reconstruct_path(self, target_uid, visited: dict) -> list:
+        '''
+        Reconstrói o caminho a partir do dicionário de nós visitados.
+        '''
+        path = deque()
+        current = target_uid
+        
+        while current is not None:
+            path.appendleft(current)
+            current = visited[current]
+            
+        return list(path)
+
+    def _search(self, person_uid, friend_uid, path_type: PathType) -> list:
+        '''
+        Encontra o caminho mais curto entre person_uid e friend_uid.
+        
+        Args:
+            person_uid: ID do nó de origem
+            friend_uid: ID do nó de destino
+            path_type: Tipo de caminho (regular ou alternante)
+        
+        Returns:
+            lista com o caminho mais curto (incluindo origem e destino) ou lista vazia se não houver caminho
+        '''
+        if person_uid == friend_uid:
+            return [person_uid]
+        
+        visited = {person_uid: None}
+        
         if path_type == PathType.regular:
-            pass
+            return self._regular_bfs(person_uid, friend_uid, visited)
         elif path_type == PathType.alternante:
-            pass
-
-        path = []
-
-        return path
-
+            return self._alternating_bfs(person_uid, friend_uid, visited)
+        else:
+            raise ValueError(f"Tipo de caminho não suportado: {path_type}")
+        
     def get_separation_degree(self, path_type: PathType):
 
         total_paths_len = 0
@@ -110,5 +179,4 @@ class FriendNetwork(object):
             person_uid, friend_uid = random.sample([*self._graph.keys()], 2)
             path = self._search(person_uid, friend_uid, path_type)
             total_paths_len += len(path) - 1
-
         return total_paths_len / 100

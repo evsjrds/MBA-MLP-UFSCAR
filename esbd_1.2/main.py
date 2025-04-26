@@ -2,7 +2,7 @@ import pandas as pd
 from graph.friend_network import FriendNetwork
 from graph.friend_network import PathType
 
-NUM_VERTICES = [100, 1_000] #[100, 1000, 10_000, 100_00] 
+NUM_VERTICES = [100, 1000, 10_000, 100_00] 
 FACTORS = ["5", "raiz(n)", "n/5"]
 
 def get_num_medio_arestas_por_vertice(num_vertice, factor):
@@ -17,7 +17,7 @@ def get_separation_degree(people_num: int, connections_num: int, path_type: Path
     friend_network = FriendNetwork(people_num, connections_num)
     return friend_network.get_separation_degree(path_type)
 
-columns = ["# Vértices (n)", "Regular - 5", "Regular - raiz(n)", "Regular - n/5", 
+columns = ["# Vértices (n)", "Regular - 5", "Regular - raiz(n)", "Regular - n/5",
            "Alternante - 5", "Alternante - raiz(n)", "Alternante - n/5"]
 
 results = []
